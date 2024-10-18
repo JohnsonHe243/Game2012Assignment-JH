@@ -1,3 +1,4 @@
+﻿// do not touch anything outside of task 1 and task 2
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "Math.h"
@@ -139,24 +140,48 @@ int main()
     };
 
     // Task 1 -- loop through all vertices to assign positions and colors
+    /*
+        Generate 30,000 vertices of the Sierpiński triangle. This can be done using the aforementioned 
+        algorithm, and is shown by the following pseudocode.
+        Vertex triangle[3]
+        for all vertices
+        n = rand() % 3
+        current position = (previous position + triangle position[n]) / 2
+        current colour = triangle colour[n]
+        
+    */
+
+    // Task 1: Generate 30,000 vertices of the Sierpiński triangle
     Vertices vertices(30000);
     Vertex triangle[3];
-
-    for (int i = 0; i < 30000; ++i)
+    for (int i = 1; i < 30000; i++)
     {
         int n = (int)(rand() % 3);
-        vertices[i].position = (vertices[i].position + positions[n]) / 2.0f;
-        colors[i] = colors[n];
+        vertices[i].position = (vertices[i - 1].position + triangle[n].position) / 2; 
+        vertices[i].color = triangle[n].color;
     }
-
-    // Task 2 -- upload vertices to the GPU
-    GLuint vao, vbo;
     
-    // Create and initialize a buffer object
-    GLuint vbo;
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), triangle, GL_STATIC_DRAW);
+    // Task 2: Upload vertices to the GPU
+    GLuint vao, pbo, cbo;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    // Create position buffer:
+    glGenBuffers(1, &pbo);              // Allocate a vbo handle
+    glBindBuffer(GL_ARRAY_BUFFER, pbo); // Associate this buffer with the bound vertex array
+    glBufferData(GL_ARRAY_BUFFER, 3 * vertices.size(), positions, GL_STATIC_DRAW);  // Upload the buffer
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * vertices.size(), 0);          // Describe the buffer
+    glEnableVertexAttribArray(0);
+
+    // Create color buffer:
+    glGenBuffers(1, &cbo);              // Allocate a vbo handle
+    glBindBuffer(GL_ARRAY_BUFFER, cbo); // Associate this buffer with the bound vertex array
+    glBufferData(GL_ARRAY_BUFFER, 3* vertices.size(), colors, GL_STATIC_DRAW);    // Upload the buffer
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * vertices.size(), 0);          // Describe the buffer
+    glEnableVertexAttribArray(1);
+
+    glEnable(GL_DEPTH_TEST);
+
 
    
     while (!glfwWindowShouldClose(window))
