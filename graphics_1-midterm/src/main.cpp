@@ -153,12 +153,12 @@ int main()
 
     // Task 1: Generate 30,000 vertices of the Sierpiński triangle
     Vertices vertices(30000);
-    Vertex triangle[3];
+    Vertex triangle[30000][3];
     for (int i = 1; i < 30000; i++)
     {
         int n = (int)(rand() % 3);
-        vertices[i].position = (vertices[i - 1].position + triangle[n].position) / 2; 
-        vertices[i].color = triangle[n].color;
+        vertices[i].position = (vertices[i - 1].position + triangle[i][n].position) / 2;
+        // vertices[i].color = triangle[n].color;
     }
     
     // Task 2: Upload vertices to the GPU
@@ -169,18 +169,29 @@ int main()
     // Create position buffer:
     glGenBuffers(1, &pbo);              // Allocate a vbo handle
     glBindBuffer(GL_ARRAY_BUFFER, pbo); // Associate this buffer with the bound vertex array
-    glBufferData(GL_ARRAY_BUFFER, 3 * vertices.size(), positions, GL_STATIC_DRAW);  // Upload the buffer
+    glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(vertices), positions, GL_STATIC_DRAW);  // Upload the buffer
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * vertices.size(), 0);          // Describe the buffer
     glEnableVertexAttribArray(0);
 
     // Create color buffer:
     glGenBuffers(1, &cbo);              // Allocate a vbo handle
     glBindBuffer(GL_ARRAY_BUFFER, cbo); // Associate this buffer with the bound vertex array
-    glBufferData(GL_ARRAY_BUFFER, 3* vertices.size(), colors, GL_STATIC_DRAW);    // Upload the buffer
+    glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(vertices), colors, GL_STATIC_DRAW);    // Upload the buffer
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * vertices.size(), 0);          // Describe the buffer
     glEnableVertexAttribArray(1);
 
-    glEnable(GL_DEPTH_TEST);
+    GLuint buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), positions, GL_STATIC_DRAW);
+
+
+    //// Initialize the vertex position attribute from the vertex shader
+    //GLuint loc = glGetAttribLocation(shaderDefault, "vertex_position");
+    //glEnableVertexAttribArray(loc);
+    //glVertexAttribPointer(loc, 3, GL_FLOAT, GL_FALSE, vertices.size(), 0);
+
+    //glEnable(GL_DEPTH_TEST);
 
 
    

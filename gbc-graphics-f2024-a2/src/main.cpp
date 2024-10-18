@@ -214,16 +214,69 @@ int main(void)
             break;
 
         case 3:
+            //Vector2 curr[4]
+            //{
+            //    { -1.0f,  1.0f },   // top-left
+            //    {  1.0f,  1.0f },   // top-right
+            //    {  1.0f, -1.0f },   // bot-right
+            //    { -1.0f, -1.0f }    // bot-left
+            //};
+
+            //Vector2 next[4]
+            //{
+            //    (curr[0] + curr[1]) * 0.5f,
+            //    (curr[1] + curr[2]) * 0.5f,
+            //    (curr[2] + curr[3]) * 0.5f,
+            //    (curr[3] + curr[0]) * 0.5f
+            //};
+
             // TODO -- read up on glBufferSubData to understand what on earth just happened ;)
+            //shaderProgram = shaderLines;
+            //glUseProgram(shaderProgram);
+            //glUniform1f(glGetUniformLocation(shaderProgram, "u_a"), a);
+            //glLineWidth(1.0f);
+            //glBindVertexArray(vaoLines);
             shaderProgram = shaderLines;
             glUseProgram(shaderProgram);
             glUniform1f(glGetUniformLocation(shaderProgram, "u_a"), a);
-            glLineWidth(10.0f);
+            glLineWidth(1.0f);
             glBindVertexArray(vaoLines);
+
+            
+            Vector2 a[4], b[4], c[4], d[4], e[4],f[4], g[4], h[4];
+            for (int i = 0; i < 4; i++)
+            {
+                a[i] = curr[i] / 2;
+                b[i] = next[i] / 2;
+                c[i] = a[i] / 2;
+                d[i] = b[i] / 2;
+                e[i] = c[i] / 2;
+                f[i] = d[i] / 2;
+                g[i] = e[i] / 2;
+                h[i] = f[i] / 2;
+            }
             glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(Vector2), curr);
             glDrawArrays(GL_LINE_LOOP, 0, 4);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(Vector2), next);
+            glad_glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(Vector2), next);
             glDrawArrays(GL_LINE_LOOP, 0, 4);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(Vector2), a);
+            glDrawArrays(GL_LINE_LOOP, 0, 4);
+            glad_glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(Vector2), b);
+            glDrawArrays(GL_LINE_LOOP, 0, 4);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(Vector2), c);
+            glDrawArrays(GL_LINE_LOOP, 0, 4);
+            glad_glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(Vector2), d);
+            glDrawArrays(GL_LINE_LOOP, 0, 4);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(Vector2), e);
+            glDrawArrays(GL_LINE_LOOP, 0, 4);
+            glad_glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(Vector2), f);
+            glDrawArrays(GL_LINE_LOOP, 0, 4);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(Vector2), g);
+            glDrawArrays(GL_LINE_LOOP, 0, 4);
+            glad_glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(Vector2), h);
+            glDrawArrays(GL_LINE_LOOP, 0, 4);
+
+
             break;
 
         case 4:
@@ -243,7 +296,7 @@ int main(void)
             u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
             glUniformMatrix4fv(u_mvp, 1, GL_FALSE, ToFloat16(mvp).v);
             glUniform3fv(u_color, 1, &cC.x);
-            glUniform1f(u_intensity, 1.0f - a);
+            glUniform1f(u_intensity, 1.0f - 1.0);
             glBindVertexArray(vao);
             glDrawArrays(GL_TRIANGLES, 0, 3);
             break;
