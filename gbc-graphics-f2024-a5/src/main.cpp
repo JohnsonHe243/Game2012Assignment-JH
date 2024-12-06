@@ -255,16 +255,16 @@ int main(void)
     float objectSpeed = 10.0f;
 
     // Orbit Light
-    Vector3 litePos = { 5.0f, 5.0f, 0.0f };
+    Vector3 litePos = { 10.0f, 10.0f, 10.0f };
     Vector3 liteCol = { 1.0f, 1.0f, 1.0f };
     float liteRad = 1.0f;
 
     // Direction Light
-    Vector3 dirLitePos = { -5.0f, -2.0f, 0.0f };
+    Vector3 dirLitePos = { 3.0f, 0.0f, 3.0f };
     float dirLiteRad = 1.0f;
 
     // Spot Light
-    Vector3 spoLitePos = { 0.0f, 0.0f, 0.0f };
+    Vector3 spoLitePos = { 0.0f, 3.0f, 0.0f };
     Vector3 spoLiteCol = { 1.0f, 1.0f, 1.0f };
     Vector3 spoLiteDir = { 0.0f, 0.0f, 0.0f };
     float spoLiteRad = 2.0f;
@@ -530,10 +530,10 @@ int main(void)
             DrawMesh(sphereMesh);
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-            // Dice Render
+            // Dice Render & Direction Light
             shaderProgram = shaderPhongColor;
             glUseProgram(shaderProgram);
-            world = Translate(0.0f, 0.0f, 0.0f);
+            world = Translate(0.0f, 4.0f, 0.0f);
             scale = 3.0f;
             matrixScale = Scale(scale, scale, scale);
             mvp = matrixScale * world * view * proj;
@@ -584,7 +584,7 @@ int main(void)
             shaderProgram = shaderPhongGrey;
             glUseProgram(shaderProgram);
             //world = Scale(planeValues, planeValues, planeValues) * RotateX(rotationAmount) * Translate(-planeValues / 2, -1.5f, -planeValues / 2);
-            world = Scale(8.0f, 8.0f, 8.0f) * Translate(-3.0f, -5.0f, 1.0f) * RotateX(90.0f * DEG2RAD);
+            world = Scale(10.0f, 10.0f, 10.0f) * Translate(-3.0f, -5.0f, 1.0f) * RotateX(90.0f * DEG2RAD);
             mvp = world * view * proj;
 
             u_world = glGetUniformLocation(shaderProgram, "u_world");
