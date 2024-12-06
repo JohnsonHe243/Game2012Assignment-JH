@@ -6,15 +6,15 @@ in vec3 normal;
 out vec4 FragColor;
 
 // TODO for yourself: figure out how to send more than 1 light worth of information to this shader
-uniform vec3 u_cameraPosition;
-uniform vec3 u_lightPosition;
-uniform vec3 u_lightDirection;
-uniform vec3 u_lightColor;
-uniform float u_lightRadius;
+uniform vec3 u_camPos;
+uniform vec3 u_litePos;
+uniform vec3 u_liteDir;
+uniform vec3 u_liteCol;
+uniform float u_liteRad;
 
-uniform float u_ambientFactor;
-uniform float u_diffuseFactor;
-uniform float u_specularPower;
+uniform float u_facAmb;
+uniform float u_facDfue;
+uniform float u_powSpur;
 
 vec3 phong(vec3 position, vec3 normal, vec3 camera, vec3 light, vec3 color, float ambientFactor, float diffuseFactor, float specularPower)
 {
@@ -66,7 +66,7 @@ vec3 spot_light(vec3 position, vec3 direction, vec3 normal, vec3 camera, vec3 li
 void main()
 {
     //vec3 lighting = point_light(position, normal, u_cameraPosition, u_lightPosition, u_lightColor, u_ambientFactor, u_diffuseFactor, u_specularPower, u_lightRadius);
-    vec3 lighting = direction_light(u_lightDirection, normal, u_cameraPosition, u_lightColor, u_ambientFactor, u_diffuseFactor, u_specularPower);
+    vec3 lighting = direction_light(u_liteDir, normal, u_camPos, u_liteCol, u_facAmb, u_facDfue, u_powSpur);
     // TODO -- test spot light and multiple lights
     FragColor = vec4(lighting, 1.0);
 }
