@@ -172,22 +172,22 @@ int main(void)
     free(pixelsGradient);
     pixelsGradient = nullptr;
 
-    // New texture: Cube
-    int texCubeW = 0; // s1
-    int texCubeH = 0;
-    int texCubeC = 0;
-    stbi_uc* cubeP = stbi_load("./assets/textures/dice.png", &texCubeW, &texCubeH, &texCubeC, 0);
+    // New texture: Dice
+    int texDiceW = 0; // s1
+    int texDiceH = 0;
+    int texDiceC = 0;
+    stbi_uc* pixelD = stbi_load("./assets/textures/dice.png", &texDiceW, &texDiceH, &texDiceC, 0);
 
-    GLuint cubeTex = GL_NONE; // s2
-    glGenTextures(1, &cubeTex);
-    glBindTexture(GL_TEXTURE_2D, cubeTex);
+    GLuint diceTex = GL_NONE; // s2
+    glGenTextures(1, &diceTex);
+    glBindTexture(GL_TEXTURE_2D, diceTex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texCubeW, texCubeH, 0, GL_RGB, GL_UNSIGNED_BYTE, cubeP);
-    stbi_image_free(cubeP);
-    cubeP = nullptr;
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texDiceW, texDiceH, 0, GL_RGB, GL_UNSIGNED_BYTE, pixelD);
+    stbi_image_free(pixelD);
+    pixelD = nullptr;
 
 
 
@@ -259,7 +259,7 @@ int main(void)
     float liteRad = 1.0f;
 
     // Direction Light
-    Vector3 dirLitePos = { -5.0f, 8.0f, 0.0f };
+    Vector3 dirLitePos = { -5.0f, -2.0f, 0.0f };
     float dirLiteRad = 1.0f;
 
     // Spot Light
@@ -497,8 +497,7 @@ int main(void)
 
         // Phong
         case 3:
-
-
+            // SpotLight
 
             shaderProgram = shaderUniformColor;
             glUseProgram(shaderProgram);
@@ -512,14 +511,16 @@ int main(void)
             DrawMesh(sphereMesh);
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-            // Orbit Light Position
-
+            // Orbit Light
             shaderProgram = shaderUniformColor;
             glUseProgram(shaderProgram);
-            litePos = { 2.5f * sin(time), 0.0f, 2.0f * cos(time) };
+
+            // orbit translation
+            //litePos.x = litePos.x * sin(time);
+            //litePos.z = litePos.z * cos(time);
+            litePos = { 2.5f * sin(time), 5.0f, 2.0f * cos(time) }; 
 
             world = Scale(V3_ONE * dirLiteRad) * Translate(litePos);
-
             mvp = world * view * proj;
             u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
             u_color = glGetUniformLocation(shaderProgram, "u_color");
@@ -528,6 +529,54 @@ int main(void)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             DrawMesh(sphereMesh);
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+            shaderProgram = shaderPhongColor;
+            glUseProgram(shaderProgram);
+            world = Translate(0.0f, 0.0f, 0.0f);
+            mvp = world * view * proj;
+            normal = Transpose(Invert(world));
+            u_world = glGetUniformLocation(shaderProgram, "u_world");
+            u_normal = glGetUniformLocation(shaderProgram, "u_normal");
+            u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
+            u_tex = glGetUniformLocation(shaderProgram, "u_tex");
+            u_camPos = glGetUniformLocation(shaderProgram, "u_camPos");
+            u_litePos = glGetUniformLocation(shaderProgram, "u_litePos");
+            u_liteRad = glGetUniformLocation(shaderProgram, "u_liteRad");
+            u_liteCol = glGetUniformLocation(shaderProgram, "u_liteCol");
+            u_dirLitePos = glGetUniformLocation(shaderProgram, "u_dirLitePos");
+            u_dirLiteRad = glGetUniformLocation(shaderProgram, "u_dirLiteRad");
+            u_spoLCamPos = glGetUniformLocation(shaderProgram, "u_spoLCamPos");
+            u_spoLiteCol = glGetUniformLocation(shaderProgram, "u_spoLiteCol");
+            u_spoLiteDir = glGetUniformLocation(shaderProgram, "u_spoLiteDir");
+            u_spoLitePos = glGetUniformLocation(shaderProgram, "u_spoLitePos");
+            u_spoLiteRad = glGetUniformLocation(shaderProgram, "u_spoLiteRad");
+            
+            glUniformMatrix4fv(u_world, 1, GL_FALSE, ToFloat16(world).v);
+            glUniformMatrix3fv(u_normal, 1, GL_FALSE, ToFloat9(normal).v);
+            glUniformMatrix4fv(u_mvp, 1, GL_FALSE, ToFloat16(mvp).v);
+            
+            glUniform3fv(u_litePos, 1, &camPos.x);
+            glUniform3fv(u_litePos, 1, &litePos.x);
+            glUniform3fv(u_liteCol, 1, &liteCol.x);
+            glUniform1f(u_liteRad, liteRad);
+
+            glUniform3fv(u_dirLitePos, 1, &dirLitePos.x);
+            glUniform1f(u_dirLiteRad, dirLiteRad);
+
+            glUniform3fv(u_spoLitePos, 1, &camPos.x);
+            glUniform3fv(u_spoLitePos, 1, &spoLitePos.x);
+            glUniform3fv(u_spoLiteCol, 1, &spoLiteCol.x);
+            glUniform3fv(u_spoLiteDir, 1, &spoLiteDir.x);
+            glUniform1f(u_spoLiteRad, spoLiteRad);
+
+            glUniform1i(u_tex, 0);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, diceTex);
+            DrawMesh(diceMesh);
+
+
+
+
 
 
             break;
