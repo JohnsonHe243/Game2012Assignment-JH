@@ -76,9 +76,10 @@ void main()
 	vec3 dirLite = (dirAmb + dirDfue) * dirDim;
 
 	// -- Combine Lighting --
-	vec3 texCol = texture(u_tex, tcoord).rgb * 1.5;
-	vec3 allLites = (orbLite + dirLite + spoLite) * texCol;
+	vec3 grey = vec3(0.5, 0.5, 0.5) * 3.5;
+	vec3 allLites = (orbLite + dirLite + spoLite) * grey;
 
 	// Final Fragment Color
 	FragColor = vec4(allLites, 1.0);
 }
+

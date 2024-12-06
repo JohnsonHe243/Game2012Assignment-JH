@@ -96,7 +96,7 @@ int main(void)
     GLuint fsTexture = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/texture_color.frag");
     GLuint fsTextureMix = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/texture_color_mix.frag");
     GLuint fsPhongColor = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/phong_color.frag");
-
+    GLuint fsPhongGrey = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/phong_grey.frag");
     GLuint fsPhong = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/phong.frag");
     
     // Shader programs:
@@ -111,7 +111,7 @@ int main(void)
     GLuint shaderTextureMix = CreateProgram(vs, fsTextureMix);
     GLuint shaderSkybox = CreateProgram(vsSkybox, fsSkybox);
     GLuint shaderPhongColor = CreateProgram(vs, fsPhongColor);
-
+    GLuint shaderPhongGrey = CreateProgram(vs, fsPhongGrey);
     GLuint shaderPhong = CreateProgram(vs, fsPhong);
 
     // See Diffuse 2.png for context
@@ -255,7 +255,7 @@ int main(void)
 
     // Orbit Light
     Vector3 litePos = { 5.0f, 5.0f, 0.0f };
-    Vector3 liteCol = { 1.0f, 0.5f, 0.0f };
+    Vector3 liteCol = { 1.0f, 1.0f, 1.0f };
     float liteRad = 1.0f;
 
     // Direction Light
@@ -263,16 +263,16 @@ int main(void)
     float dirLiteRad = 1.0f;
 
     // Spot Light
-    Vector3 spoLitePos = { 8.0f, 8.0f, -8.0f };
-    Vector3 spoLiteCol = { 1.0f, 0.8f, 0.0f };
+    Vector3 spoLitePos = { 0.0f, 0.0f, 0.0f };
+    Vector3 spoLiteCol = { 1.0f, 1.0f, 1.0f };
     Vector3 spoLiteDir = { 0.0f, 0.0f, 0.0f };
     float spoLiteRad = 2.0f;
 
     float lightAngle = 90.0f * DEG2RAD;
 
-    float ambientFactor = 0.25f;
-    float diffuseFactor = 1.0f;
-    float specularPower = 64.0f;
+    float ambientFactor = 0.5f;
+    float diffuseFactor = 0.5f;
+    float specularPower = 125.0f;
 
     // Render looks weird cause this isn't enabled, but its causing unexpected problems which I'll fix soon!
     glEnable(GL_DEPTH_TEST);
@@ -498,7 +498,6 @@ int main(void)
         // Phong
         case 3:
             // SpotLight
-
             shaderProgram = shaderUniformColor;
             glUseProgram(shaderProgram);
             world = Scale(V3_ONE * dirLiteRad) * Translate(dirLitePos);
@@ -530,11 +529,13 @@ int main(void)
             DrawMesh(sphereMesh);
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+            // Dice Render
             shaderProgram = shaderPhongColor;
             glUseProgram(shaderProgram);
             world = Translate(0.0f, 0.0f, 0.0f);
             mvp = world * view * proj;
             normal = Transpose(Invert(world));
+
             u_world = glGetUniformLocation(shaderProgram, "u_world");
             u_normal = glGetUniformLocation(shaderProgram, "u_normal");
             u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
@@ -574,11 +575,33 @@ int main(void)
             glBindTexture(GL_TEXTURE_2D, diceTex);
             DrawMesh(diceMesh);
 
+            // Plane
+            shaderProgram = shaderPhongGrey;
+            glUseProgram(shaderProgram);
+            //world = Scale(planeValues, planeValues, planeValues) * RotateX(rotationAmount) * Translate(-planeValues / 2, -1.5f, -planeValues / 2);
+            world = Scale(8.0f, 8.0f, 8.0f) * Translate(-3.0f, -5.0f, 1.0f) * RotateX(90.0f * DEG2RAD);
+            mvp = world * view * proj;
 
+            u_world = glGetUniformLocation(shaderProgram, "u_world");
+            u_normal = glGetUniformLocation(shaderProgram, "u_normal");
+            u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
+            
+            u_camPos = glGetUniformLocation(shaderProgram, "u_camPos");
+            u_litePos = glGetUniformLocation(shaderProgram, "u_litePos");
+            u_liteCol = glGetUniformLocation(shaderProgram, "u_liteCol");
+            u_liteRad = glGetUniformLocation(shaderProgram, "u_liteRad");
 
+            glUniformMatrix4fv(u_world, 1, GL_FALSE, ToFloat16(world).v);
+            glUniformMatrix3fv(u_normal, 1, GL_FALSE, ToFloat9(normal).v);
+            glUniformMatrix4fv(u_mvp, 1, GL_FALSE, ToFloat16(mvp).v);
 
+            glUniform3fv(u_litePos, 1, &camPos.x);
+            glUniform3fv(u_litePos, 1, &litePos.x);
+            glUniform3fv(u_liteCol, 1, &liteCol.x);
+            glUniform1f(u_liteRad, liteRad);
 
-
+            glUniformMatrix4fv(u_mvp, 1, GL_FALSE, ToFloat16(mvp).v);
+            DrawMesh(planeMesh);
             break;
 
         // Skybox (cubemap, 1 texture for each side of a cube)!
