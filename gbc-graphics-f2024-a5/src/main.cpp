@@ -95,6 +95,8 @@ int main(void)
     GLuint fsNormals = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/normal_color.frag");
     GLuint fsTexture = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/texture_color.frag");
     GLuint fsTextureMix = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/texture_color_mix.frag");
+    GLuint fsTexturePhongColor = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/phong_color.frag");
+
     GLuint fsPhong = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/phong.frag");
     
     // Shader programs:
@@ -108,6 +110,8 @@ int main(void)
     GLuint shaderTexture = CreateProgram(vs, fsTexture);
     GLuint shaderTextureMix = CreateProgram(vs, fsTextureMix);
     GLuint shaderSkybox = CreateProgram(vsSkybox, fsSkybox);
+    GLuint shaderTexturePhongColor = CreateProgram(vs, fsTexturePhongColor);
+
     GLuint shaderPhong = CreateProgram(vs, fsPhong);
 
     // See Diffuse 2.png for context
@@ -140,14 +144,13 @@ int main(void)
         }
     }
 
-    // Step 1: Load image from disk to CPU
-    int texHeadWidth = 0;
+    // Head Texture
+    int texHeadWidth = 0;   // Step 1: Load image from disk to CPU
     int texHeadHeight = 0;
     int texHeadChannels = 0;
     stbi_uc* pixelsHead = stbi_load("./assets/textures/head.png", &texHeadWidth, &texHeadHeight, &texHeadChannels, 0);
-
-    // Step 2: Upload image from CPU to GPU
-    GLuint texHead = GL_NONE;
+    
+    GLuint texHead = GL_NONE;   // Step 2: Upload image from CPU to GPU
     glGenTextures(1, &texHead);
     glBindTexture(GL_TEXTURE_2D, texHead);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -168,6 +171,25 @@ int main(void)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texGradientWidth, texGradientHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixelsGradient);
     free(pixelsGradient);
     pixelsGradient = nullptr;
+
+    // New texture: Cube
+    int texCubeW = 0; // s1
+    int texCubeH = 0;
+    int texCubeC = 0;
+    stbi_uc* cubeP = stbi_load("./assets/textures/cube.png", &texCubeW, &texCubeH, &texCubeC, 0);
+
+    GLuint cubeTex = GL_NONE; // s2
+    glGenTextures(1, &cubeTex);
+    glBindTexture(GL_TEXTURE_2D, cubeTex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texCubeW, texCubeH, 0, GL_RGB, GL_UNSIGNED_BYTE, cubeP);
+    stbi_image_free(cubeP);
+    cubeP = nullptr;
+
+
 
     const char* skyboxPath[6] =
     {
@@ -214,8 +236,9 @@ int main(void)
     bool texToggle = false;
     bool camToggle = false;
 
-    Mesh headMesh, cubeMesh, sphereMesh, planeMesh;
+    Mesh headMesh, cubeMesh, sphereMesh, planeMesh, diceMesh;
     CreateMesh(&headMesh, "assets/meshes/head.obj");
+    CreateMesh(&diceMesh, "assets/meshes/dice.obj");
     CreateMesh(&cubeMesh, CUBE);
     CreateMesh(&sphereMesh, SPHERE);
     CreateMesh(&planeMesh, PLANE);
@@ -230,9 +253,21 @@ int main(void)
     Vector3 objectPosition = V3_ZERO;
     float objectSpeed = 10.0f;
 
-    Vector3 lightPosition = { 5.0f, 5.0f, 0.0f };
-    Vector3 lightColor = { 1.0f, 0.5f, 0.0f };
-    float lightRadius = 1.0f;
+    // Orbit Light
+    Vector3 litePos = { 5.0f, 5.0f, 0.0f };
+    Vector3 liteCol = { 1.0f, 0.5f, 0.0f };
+    float liteRad = 1.0f;
+
+    // Direction Light
+    Vector3 dirLitePos = { -5.0f, 8.0f, 0.0f };
+    float dirLiteRad = 1.0f;
+
+    // Spot Light
+    Vector3 spoLitePos = { 8.0f, 8.0f, -8.0f };
+    Vector3 spoLiteCol = { 1.0f, 0.8f, 0.0f };
+    Vector3 spoLiteDir = { 0.0f, 0.0f, 0.0f };
+    float spoLiteRad = 2.0f;
+
     float lightAngle = 90.0f * DEG2RAD;
 
     float ambientFactor = 0.25f;
@@ -379,15 +414,31 @@ int main(void)
         GLuint texture = texToggle ? texGradient : texHead;
         GLint u_t = GL_NONE;
 
-        GLint u_cameraPosition = -2;
-        GLint u_lightPosition = -2;
-        GLint u_lightDirection = -2;
-        GLint u_lightColor = -2;
-        GLint u_lightRadius = -2;
+        // -- Light Handles --
+
+        GLint u_camPos = -2;
+
+        // Orbit Light
+        GLint u_litePos = -2;
+        GLint u_liteDir = -2;
+        GLint u_liteCol = -2;
+        GLint u_liteRad = -2;
+
+        // Direction Light
+        GLint u_dirLitePos = -2;
+        GLint u_dirLiteRad = -2;
+
+        // Spot Light
+        GLint u_spoLCamPos = -2;
+        GLint u_spoLitePos = -2;
+        GLint u_spoLiteCol = -2;
+        GLint u_spoLiteDir = -2;
+        GLint u_spoLiteRad = -2;
         
-        GLint u_ambientFactor = -2;
-        GLint u_diffuseFactor = -2;
-        GLint u_SpecularPower = -2;
+        // Light Effects
+        GLint u_facAmb = -2; // Ambient
+        GLint u_facDfue = -2; // Defuse
+        GLint u_powSpur = -2; // Specular
 
         // Extra practice: render the skybox here and it should be applied to cases 1-5!
         // You may need to tweak a few things like matrix values and depth state in order for everything to work correctly.
@@ -465,15 +516,15 @@ int main(void)
             u_world = glGetUniformLocation(shaderProgram, "u_world");
             u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
 
-            u_cameraPosition = glGetUniformLocation(shaderProgram, "u_cameraPosition");
-            u_lightPosition = glGetUniformLocation(shaderProgram, "u_lightPosition");
-            u_lightDirection = glGetUniformLocation(shaderProgram, "u_lightDirection");
-            u_lightColor = glGetUniformLocation(shaderProgram, "u_lightColor");
-            u_lightRadius = glGetUniformLocation(shaderProgram, "u_lightRadius");
+            u_camPos = glGetUniformLocation(shaderProgram, "u_cameraPosition");
+            u_litePos = glGetUniformLocation(shaderProgram, "u_lightPosition");
+            u_liteDir = glGetUniformLocation(shaderProgram, "u_lightDirection");
+            u_liteCol = glGetUniformLocation(shaderProgram, "u_lightColor");
+            u_liteRad = glGetUniformLocation(shaderProgram, "u_lightRadius");
 
-            u_ambientFactor = glGetUniformLocation(shaderProgram, "u_ambientFactor");
-            u_diffuseFactor = glGetUniformLocation(shaderProgram, "u_diffuseFactor");
-            u_SpecularPower = glGetUniformLocation(shaderProgram, "u_specularPower");
+            u_facAmb = glGetUniformLocation(shaderProgram, "u_ambientFactor");
+            u_facDfue = glGetUniformLocation(shaderProgram, "u_diffuseFactor");
+            u_powSpur = glGetUniformLocation(shaderProgram, "u_specularPower");
 
             glUniformMatrix3fv(u_normal, 1, GL_FALSE, ToFloat9(normal).v);
             glUniformMatrix4fv(u_world, 1, GL_FALSE, ToFloat16(world).v);
@@ -481,28 +532,28 @@ int main(void)
 
             Vector3 lightDirection = Direction(lightAngle);
 
-            glUniform3fv(u_cameraPosition, 1, &camPos.x);
-            glUniform3fv(u_lightPosition, 1, &lightPosition.x);
-            glUniform3fv(u_lightDirection, 1, &lightDirection.x);
-            glUniform3fv(u_lightColor, 1, &lightColor.x);
-            glUniform1f(u_lightRadius, lightRadius);
+            glUniform3fv(u_camPos, 1, &camPos.x);
+            glUniform3fv(u_litePos, 1, &litePos.x);
+            glUniform3fv(u_liteDir, 1, &lightDirection.x);
+            glUniform3fv(u_liteCol, 1, &liteCol.x);
+            glUniform1f(u_liteRad, liteRad);
 
-            glUniform1f(u_ambientFactor, ambientFactor);
-            glUniform1f(u_diffuseFactor, diffuseFactor);
-            glUniform1f(u_SpecularPower, specularPower);
+            glUniform1f(u_facAmb, ambientFactor);
+            glUniform1f(u_facDfue, diffuseFactor);
+            glUniform1f(u_powSpur, specularPower);
 
             DrawMesh(sphereMesh);
 
             // Visualize light as wireframe
             shaderProgram = shaderUniformColor;
             glUseProgram(shaderProgram);
-            world = Scale(V3_ONE * lightRadius) * Translate(lightPosition);
+            world = Scale(V3_ONE * liteRad) * Translate(litePos);
             mvp = world * view * proj;
             //u_world = glGetUniformLocation(shaderProgram, "u_world");
             u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
             u_color = glGetUniformLocation(shaderProgram, "u_color");
             glUniformMatrix4fv(u_mvp, 1, GL_FALSE, ToFloat16(mvp).v);
-            glUniform3fv(u_color, 1, &lightColor.x);
+            glUniform3fv(u_color, 1, &liteCol.x);
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             DrawMesh(sphereMesh);
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -547,8 +598,8 @@ int main(void)
         else
         {
             ImGui::SliderFloat3("Camera Position", &camPos.x, -10.0f, 10.0f);
-            ImGui::SliderFloat3("Light Position", &lightPosition.x, -10.0f, 10.0f);
-            ImGui::SliderFloat("Light Radius", &lightRadius, 0.25f, 5.0f);
+            ImGui::SliderFloat3("Light Position", &litePos.x, -10.0f, 10.0f);
+            ImGui::SliderFloat("Light Radius", &liteRad, 0.25f, 5.0f);
             ImGui::SliderAngle("Light Angle", &lightAngle);
 
             ImGui::SliderFloat("Ambient", &ambientFactor, 0.0f, 1.0f);
