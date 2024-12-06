@@ -302,10 +302,20 @@ int main(void)
             camMove = 0.0f;
             mouseScale = 0.0f;
         }
-        camPitch += mouseDelta.y * mouseScale;
-        camYaw += mouseDelta.x * mouseScale;
 
-        camPitch = fmax(fmin(camPitch, 89.0f), -89.0f);  // Clamp tighter to avoid near-alignment
+        if (camPos.z <= 0 || camPos.y <= 0 || camPos.x <= 0)
+        {
+            camYaw += mouseDelta.x * mouseScale;
+            camPitch -= mouseDelta.y * mouseScale;
+        }
+        else
+        {
+            camYaw += mouseDelta.x * mouseScale;
+            camPitch += mouseDelta.y * mouseScale;
+        }
+
+
+        camPitch = fmax(fmin(camPitch, 74.0f), -74.0f);  // Clamp tighter to avoid near-alignment
 
 
         Vector3 camForward =
