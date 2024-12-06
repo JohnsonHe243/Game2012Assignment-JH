@@ -214,10 +214,16 @@ int main(void)
     bool texToggle = false;
     bool camToggle = false;
 
-    Mesh headMesh, cubeMesh, sphereMesh;
+    Mesh headMesh, cubeMesh, sphereMesh, planeMesh;
     CreateMesh(&headMesh, "assets/meshes/head.obj");
     CreateMesh(&cubeMesh, CUBE);
     CreateMesh(&sphereMesh, SPHERE);
+    CreateMesh(&planeMesh, PLANE);
+
+    float camPitch = 0.0f;
+    float camYaw = 0.0f;
+    Vector3 camPosition = V3_ZERO;
+    float camSpeed = 10.0f;
 
     float objectPitch = 0.0f;
     float objectYaw = 0.0f;
@@ -287,37 +293,56 @@ int main(void)
         Matrix objectMatrix = objectRotation * objectTranslation;
 
         float objectDelta = objectSpeed * dt;
+
+        float camMove = camSpeed * dt;
         float mouseScale = 1.0f;
+
         if (!camToggle)
         {
-            objectDelta = 0.0f;
+            camMove = 0.0f;
             mouseScale = 0.0f;
         }
-        objectPitch += mouseDelta.y * mouseScale;
-        objectYaw += mouseDelta.x * mouseScale;
+        camPitch += mouseDelta.y * mouseScale;
+        camYaw += mouseDelta.x * mouseScale;
+
+        camPitch = fmax(fmin(camPitch, 89.0f), -89.0f);  // Clamp tighter to avoid near-alignment
+
+
+        Vector3 camForward =
+        {
+            cosf(camPitch * DEG2RAD) * cosf(camYaw * DEG2RAD),
+            sinf(camPitch * DEG2RAD),
+            cosf(camPitch * DEG2RAD) * sinf(camYaw * DEG2RAD)
+        };
+
+        camForward = Normalize(camForward);
+
+        Vector3 camRight = Normalize(Cross(V3_UP, camForward));
+        Vector3 camUp = Cross(camForward, camRight);
+
         if (IsKeyDown(GLFW_KEY_W))
         {
-            objectPosition += objectForward * objectDelta;
+            camPosition += camForward * camMove;
 ;       }
         if (IsKeyDown(GLFW_KEY_S))
         {
-            objectPosition -= objectForward * objectDelta;
+            camPosition -= camForward * camMove;
         }
         if (IsKeyDown(GLFW_KEY_A))
         {
-            objectPosition -= objectRight * objectDelta;
+            camPosition -= camRight * camMove;
         }
         if (IsKeyDown(GLFW_KEY_D))
         {
-            objectPosition += objectRight * objectDelta;
+            camPosition += camRight * camMove;
         }
         if (IsKeyDown(GLFW_KEY_LEFT_SHIFT))
         {
-            objectPosition -= objectUp * objectDelta;
+            camPosition -= camUp * camMove;
         }
         if (IsKeyDown(GLFW_KEY_SPACE))
         {
-            objectPosition += objectUp * objectDelta;
+            camPosition += camUp * camMove;
         }
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
