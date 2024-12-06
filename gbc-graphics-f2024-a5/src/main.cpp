@@ -1,6 +1,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "Mesh.h"
+#include "Math.h"
+#include <stb_image.h>
 
 // TODO -- Texture.h & Texture.cpp during lab, show result next lexture
 #define STB_IMAGE_IMPLEMENTATION
@@ -186,10 +188,8 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texDiceW, texDiceH, 0, GL_RGB, GL_UNSIGNED_BYTE, pixelD);
-    stbi_image_free(pixelD);
+    free(pixelD);
     pixelD = nullptr;
-
-
 
     const char* skyboxPath[6] =
     {
@@ -208,7 +208,7 @@ int main(void)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    stbi_set_flip_vertically_on_load(false);
+   //stbi_set_flip_vertically_on_load(false);
     for (int i = 0; i < 6; i++)
     {
         int w, h, c;
@@ -216,7 +216,7 @@ int main(void)
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         stbi_image_free(pixels);
     }
-    stbi_set_flip_vertically_on_load(true);
+    //stbi_set_flip_vertically_on_load(true);
 
     int object = 2;
     printf("Object %i\n", object + 1);
@@ -230,6 +230,7 @@ int main(void)
     float bottom = -1.0f;
     float near = 0.001f; // 1.0 for testing purposes. Usually 0.1f or 0.01f
     float far = 10.0f;
+    float scale;
 
     // Whether we render the imgui demo widgets
     bool imguiDemo = false;
@@ -533,19 +534,23 @@ int main(void)
             shaderProgram = shaderPhongColor;
             glUseProgram(shaderProgram);
             world = Translate(0.0f, 0.0f, 0.0f);
-            mvp = world * view * proj;
-            normal = Transpose(Invert(world));
+            scale = 3.0f;
+            matrixScale = Scale(scale, scale, scale);
+            mvp = matrixScale * world * view * proj;
 
             u_world = glGetUniformLocation(shaderProgram, "u_world");
             u_normal = glGetUniformLocation(shaderProgram, "u_normal");
             u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
             u_tex = glGetUniformLocation(shaderProgram, "u_tex");
+
             u_camPos = glGetUniformLocation(shaderProgram, "u_camPos");
             u_litePos = glGetUniformLocation(shaderProgram, "u_litePos");
             u_liteRad = glGetUniformLocation(shaderProgram, "u_liteRad");
             u_liteCol = glGetUniformLocation(shaderProgram, "u_liteCol");
+
             u_dirLitePos = glGetUniformLocation(shaderProgram, "u_dirLitePos");
             u_dirLiteRad = glGetUniformLocation(shaderProgram, "u_dirLiteRad");
+
             u_spoLCamPos = glGetUniformLocation(shaderProgram, "u_spoLCamPos");
             u_spoLiteCol = glGetUniformLocation(shaderProgram, "u_spoLiteCol");
             u_spoLiteDir = glGetUniformLocation(shaderProgram, "u_spoLiteDir");
@@ -618,6 +623,7 @@ int main(void)
             glUniformMatrix4fv(u_mvp, 1, GL_FALSE, ToFloat16(mvp).v);
             glBindTexture(GL_TEXTURE_CUBE_MAP, texSkybox);
             DrawMesh(cubeMesh);
+
             break;
 
         // Applies a texture to our object
