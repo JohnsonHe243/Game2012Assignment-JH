@@ -87,7 +87,7 @@ int main(void)
     GLuint vsLines = CreateShader(GL_VERTEX_SHADER, "./assets/shaders/lines.vert");
     GLuint vsVertexPositionColor = CreateShader(GL_VERTEX_SHADER, "./assets/shaders/vertex_color.vert");
     GLuint vsColorBufferColor = CreateShader(GL_VERTEX_SHADER, "./assets/shaders/buffer_color.vert");
-    
+
     // Fragment shaders:
     GLuint fsSkybox = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/skybox.frag");
     GLuint fsLines = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/lines.frag");
@@ -100,7 +100,7 @@ int main(void)
     GLuint fsPhongColor = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/phong_color.frag");
     GLuint fsPhongGrey = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/phong_grey.frag");
     GLuint fsPhong = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/phong.frag");
-    
+
     // Shader programs:
     GLuint shaderUniformColor = CreateProgram(vs, fsUniformColor);
     GLuint shaderVertexPositionColor = CreateProgram(vsVertexPositionColor, fsVertexColor);
@@ -146,33 +146,7 @@ int main(void)
         }
     }
 
-    // Head Texture
-    int texHeadWidth = 0;   // Step 1: Load image from disk to CPU
-    int texHeadHeight = 0;
-    int texHeadChannels = 0;
-    stbi_uc* pixelsHead = stbi_load("./assets/textures/head.png", &texHeadWidth, &texHeadHeight, &texHeadChannels, 0);
-    
-    GLuint texHead = GL_NONE;   // Step 2: Upload image from CPU to GPU
-    glGenTextures(1, &texHead);
-    glBindTexture(GL_TEXTURE_2D, texHead);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texHeadWidth, texHeadHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixelsHead);
-    stbi_image_free(pixelsHead);
-    pixelsHead = nullptr;
 
-    GLuint texGradient = GL_NONE;
-    glGenTextures(1, &texGradient);
-    glBindTexture(GL_TEXTURE_2D, texGradient);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texGradientWidth, texGradientHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixelsGradient);
-    free(pixelsGradient);
-    pixelsGradient = nullptr;
 
     // New texture: Dice
     int texDiceW = 0; // s1
@@ -191,31 +165,7 @@ int main(void)
     free(pixelD);
     pixelD = nullptr;
 
-    const char* skyboxPath[6] =
-    {
-        "./assets/textures/sky_x+.png",
-        "./assets/textures/sky_x-.png",
-        "./assets/textures/sky_y+.png",
-        "./assets/textures/sky_y-.png",
-        "./assets/textures/sky_z+.png",
-        "./assets/textures/sky_z-.png"
-    };
-    GLuint texSkybox = GL_NONE;
-    glGenTextures(1, &texSkybox);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, texSkybox);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-   //stbi_set_flip_vertically_on_load(false);
-    for (int i = 0; i < 6; i++)
-    {
-        int w, h, c;
-        stbi_uc* pixels = stbi_load(skyboxPath[i], &w, &h, &c, 0);
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        stbi_image_free(pixels);
-    }
+
     //stbi_set_flip_vertically_on_load(true);
 
     int object = 2;
@@ -237,10 +187,9 @@ int main(void)
     bool texToggle = false;
     bool camToggle = false;
 
-    Mesh headMesh, cubeMesh, sphereMesh, planeMesh, diceMesh;
-    CreateMesh(&headMesh, "assets/meshes/head.obj");
+    Mesh sphereMesh, planeMesh, diceMesh;
+
     CreateMesh(&diceMesh, "assets/meshes/cube.obj");
-    CreateMesh(&cubeMesh, CUBE);
     CreateMesh(&sphereMesh, SPHERE);
     CreateMesh(&planeMesh, PLANE);
 
@@ -369,7 +318,8 @@ int main(void)
         if (IsKeyDown(GLFW_KEY_W))
         {
             camPos += camForward * camMove;
-;       }
+            ;
+        }
         if (IsKeyDown(GLFW_KEY_S))
         {
             camPos -= camForward * camMove;
@@ -412,7 +362,6 @@ int main(void)
         GLint u_tex = -2;
         GLint u_textureSlots[2]{ -2, -2 };
         GLuint shaderProgram = GL_NONE;
-        GLuint texture = texToggle ? texGradient : texHead;
         GLint u_t = GL_NONE;
 
         // -- Light Handles --
@@ -435,7 +384,7 @@ int main(void)
         GLint u_spoLiteCol = -2;
         GLint u_spoLiteDir = -2;
         GLint u_spoLiteRad = -2;
-        
+
         // Light Effects
         GLint u_facAmb = -2; // Ambient
         GLint u_facDfue = -2; // Defuse
@@ -445,58 +394,14 @@ int main(void)
         // You may need to tweak a few things like matrix values and depth state in order for everything to work correctly.
         switch (object + 1)
         {
-        // Left side: object with texture applied to it
-        // Right side: the coordinates our object uses to sample its texture
+            // Left side: object with texture applied to it
+            // Right side: the coordinates our object uses to sample its texture
         case 1:
-            shaderProgram = shaderTexture;
-            glUseProgram(shaderProgram);
-            //view = view * rotationY;
-            //view = rotationY * view;
-            //world = objectMatrix;//rotationY * Translate(-2.5f, 0.0f, 0.0f);
-            mvp = world * view * proj;
-            u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
-            u_tex = glGetUniformLocation(shaderProgram, "u_tex");
-            glUniformMatrix4fv(u_mvp, 1, GL_FALSE, ToFloat16(mvp).v);
-            glUniform1i(u_tex, 0);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, texture);
-            DrawMesh(headMesh);
-
-            shaderProgram = shaderTcoords;
-            glUseProgram(shaderProgram);
-            world = rotationX * Translate(2.5f, 0.0f, 0.0f);
-            mvp = world * view * proj;
-            u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
-            glUniformMatrix4fv(u_mvp, 1, GL_FALSE, ToFloat16(mvp).v);
-            DrawMesh(headMesh);
             break;
-
-        // Interpolating (lerping) between 2 textures:
         case 2:
-            shaderProgram = shaderTextureMix;
-            mvp = world * view * proj;
-
-            glUseProgram(shaderProgram);
-            u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
-            u_textureSlots[0] = glGetUniformLocation(shaderProgram, "u_tex0");
-            u_textureSlots[1] = glGetUniformLocation(shaderProgram, "u_tex1");
-            u_t = glGetUniformLocation(shaderProgram, "u_t");
-
-            glUniformMatrix4fv(u_mvp, 1, GL_FALSE, ToFloat16(mvp).v);
-            glUniform1f(u_t, cosf(time) * 0.5f + 0.5f);
-
-            glUniform1i(u_textureSlots[0], 0);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, texGradient);
-
-            glUniform1i(u_textureSlots[1], 1);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, texHead);
-
-            DrawMesh(headMesh);
             break;
 
-        // Phong
+            // Phong
         case 3:
             // SpotLight
             shaderProgram = shaderUniformColor;
@@ -518,7 +423,7 @@ int main(void)
             // orbit translation
             //litePos.x = litePos.x * sin(time);
             //litePos.z = litePos.z * cos(time);
-            litePos = { 2.5f * sin(time), 5.0f, 2.0f * cos(time) }; 
+            litePos = { 2.5f * sin(time), 5.0f, 2.0f * cos(time) };
 
             world = Scale(V3_ONE * dirLiteRad) * Translate(litePos);
             mvp = world * view * proj;
@@ -556,11 +461,11 @@ int main(void)
             u_spoLiteDir = glGetUniformLocation(shaderProgram, "u_spoLiteDir");
             u_spoLitePos = glGetUniformLocation(shaderProgram, "u_spoLitePos");
             u_spoLiteRad = glGetUniformLocation(shaderProgram, "u_spoLiteRad");
-            
+
             glUniformMatrix4fv(u_world, 1, GL_FALSE, ToFloat16(world).v);
             glUniformMatrix3fv(u_normal, 1, GL_FALSE, ToFloat9(normal).v);
             glUniformMatrix4fv(u_mvp, 1, GL_FALSE, ToFloat16(mvp).v);
-            
+
             glUniform3fv(u_litePos, 1, &camPos.x);
             glUniform3fv(u_litePos, 1, &litePos.x);
             glUniform3fv(u_liteCol, 1, &liteCol.x);
@@ -590,7 +495,7 @@ int main(void)
             u_world = glGetUniformLocation(shaderProgram, "u_world");
             u_normal = glGetUniformLocation(shaderProgram, "u_normal");
             u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
-            
+
             u_camPos = glGetUniformLocation(shaderProgram, "u_camPos");
             u_litePos = glGetUniformLocation(shaderProgram, "u_litePos");
             u_liteCol = glGetUniformLocation(shaderProgram, "u_liteCol");
@@ -609,35 +514,11 @@ int main(void)
             DrawMesh(planeMesh);
             break;
 
-        // Skybox (cubemap, 1 texture for each side of a cube)!
-        case 4:
-            shaderProgram = shaderSkybox;
-            glUseProgram(shaderProgram);
-            // Bonus: Test your fps camera within this skybox!
-            // You need to remove the translation column from the view matrix as seen below:
-            //view.m12 = view.m13 = view.m14 = 0.0f;
-            // (Making the view matrix equivalent to rotations means no translation, but at the cost of motion sickness xD)
-            //view = rotationX * rotationY;
-            mvp = world * view * proj;
-            u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
-            glUniformMatrix4fv(u_mvp, 1, GL_FALSE, ToFloat16(mvp).v);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, texSkybox);
-            DrawMesh(cubeMesh);
 
+        case 4:
             break;
 
-        // Applies a texture to our object
         case 5:
-            shaderProgram = shaderTexture;
-            glUseProgram(shaderProgram);
-            mvp = world * view * proj;
-            u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
-            u_tex = glGetUniformLocation(shaderProgram, "u_tex");
-            glUniformMatrix4fv(u_mvp, 1, GL_FALSE, ToFloat16(mvp).v);
-            glUniform1i(u_tex, 0);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, texture);
-            DrawMesh(headMesh);
             break;
         }
 
@@ -674,7 +555,7 @@ int main(void)
                 ImGui::SliderAngle("FoV", &fov, 10.0f, 90.0f);
             }
         }
-        
+
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         timeCurr = glfwGetTime();
