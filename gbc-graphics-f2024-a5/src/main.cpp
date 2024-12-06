@@ -95,7 +95,7 @@ int main(void)
     GLuint fsNormals = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/normal_color.frag");
     GLuint fsTexture = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/texture_color.frag");
     GLuint fsTextureMix = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/texture_color_mix.frag");
-    GLuint fsTexturePhongColor = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/phong_color.frag");
+    GLuint fsPhongColor = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/phong_color.frag");
 
     GLuint fsPhong = CreateShader(GL_FRAGMENT_SHADER, "./assets/shaders/phong.frag");
     
@@ -110,7 +110,7 @@ int main(void)
     GLuint shaderTexture = CreateProgram(vs, fsTexture);
     GLuint shaderTextureMix = CreateProgram(vs, fsTextureMix);
     GLuint shaderSkybox = CreateProgram(vsSkybox, fsSkybox);
-    GLuint shaderTexturePhongColor = CreateProgram(vs, fsTexturePhongColor);
+    GLuint shaderPhongColor = CreateProgram(vs, fsPhongColor);
 
     GLuint shaderPhong = CreateProgram(vs, fsPhong);
 
@@ -176,7 +176,7 @@ int main(void)
     int texCubeW = 0; // s1
     int texCubeH = 0;
     int texCubeC = 0;
-    stbi_uc* cubeP = stbi_load("./assets/textures/cube.png", &texCubeW, &texCubeH, &texCubeC, 0);
+    stbi_uc* cubeP = stbi_load("./assets/textures/dice.png", &texCubeW, &texCubeH, &texCubeC, 0);
 
     GLuint cubeTex = GL_NONE; // s2
     glGenTextures(1, &cubeTex);
@@ -238,7 +238,7 @@ int main(void)
 
     Mesh headMesh, cubeMesh, sphereMesh, planeMesh, diceMesh;
     CreateMesh(&headMesh, "assets/meshes/head.obj");
-    CreateMesh(&diceMesh, "assets/meshes/dice.obj");
+    CreateMesh(&diceMesh, "assets/meshes/cube.obj");
     CreateMesh(&cubeMesh, CUBE);
     CreateMesh(&sphereMesh, SPHERE);
     CreateMesh(&planeMesh, PLANE);
@@ -496,60 +496,14 @@ int main(void)
             break;
 
         // Phong
-        // (Lab TODO: convert from object-space to world-space positions & normals, apply normal matrix to handle non-uniform scaling)
-        // (Lab TODO: control lighting parameters [color, position, maybe add attenuation])
         case 3:
-            shaderProgram = shaderPhong;
-            glUseProgram(shaderProgram);
-            // world = objectMatrix;
-            mvp = world * view * proj;
 
-            // Converting from mat4 to mat3 removes the translation
-            // Uniform scale (ie scale(2.0, 2.0, 2.0) preserves the direction of matrix forward, right and up
-            // Non-uniform scale (ie scale(3.0, 1.0, 1.0) changes this direction, hence we need to "re-normalize"
-            // Our matrix by taking the transpose of its inverse (http://www.lighthouse3d.com/tutorials/glsl-tutorial/the-normal-matrix/)
-            //world = Scale(3.0f, 1.0f, 1.0f) * objectMatrix;
-            //normal = world;
-            normal = Transpose(Invert(world));
 
-            u_normal = glGetUniformLocation(shaderProgram, "u_normal");
-            u_world = glGetUniformLocation(shaderProgram, "u_world");
-            u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
 
-            u_camPos = glGetUniformLocation(shaderProgram, "u_cameraPosition");
-            u_litePos = glGetUniformLocation(shaderProgram, "u_lightPosition");
-            u_liteDir = glGetUniformLocation(shaderProgram, "u_lightDirection");
-            u_liteCol = glGetUniformLocation(shaderProgram, "u_lightColor");
-            u_liteRad = glGetUniformLocation(shaderProgram, "u_lightRadius");
-
-            u_facAmb = glGetUniformLocation(shaderProgram, "u_ambientFactor");
-            u_facDfue = glGetUniformLocation(shaderProgram, "u_diffuseFactor");
-            u_powSpur = glGetUniformLocation(shaderProgram, "u_specularPower");
-
-            glUniformMatrix3fv(u_normal, 1, GL_FALSE, ToFloat9(normal).v);
-            glUniformMatrix4fv(u_world, 1, GL_FALSE, ToFloat16(world).v);
-            glUniformMatrix4fv(u_mvp, 1, GL_FALSE, ToFloat16(mvp).v);
-
-            Vector3 lightDirection = Direction(lightAngle);
-
-            glUniform3fv(u_camPos, 1, &camPos.x);
-            glUniform3fv(u_litePos, 1, &litePos.x);
-            glUniform3fv(u_liteDir, 1, &lightDirection.x);
-            glUniform3fv(u_liteCol, 1, &liteCol.x);
-            glUniform1f(u_liteRad, liteRad);
-
-            glUniform1f(u_facAmb, ambientFactor);
-            glUniform1f(u_facDfue, diffuseFactor);
-            glUniform1f(u_powSpur, specularPower);
-
-            DrawMesh(sphereMesh);
-
-            // Visualize light as wireframe
             shaderProgram = shaderUniformColor;
             glUseProgram(shaderProgram);
-            world = Scale(V3_ONE * liteRad) * Translate(litePos);
+            world = Scale(V3_ONE * dirLiteRad) * Translate(dirLitePos);
             mvp = world * view * proj;
-            //u_world = glGetUniformLocation(shaderProgram, "u_world");
             u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
             u_color = glGetUniformLocation(shaderProgram, "u_color");
             glUniformMatrix4fv(u_mvp, 1, GL_FALSE, ToFloat16(mvp).v);
@@ -557,6 +511,25 @@ int main(void)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             DrawMesh(sphereMesh);
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+            // Orbit Light Position
+
+            shaderProgram = shaderUniformColor;
+            glUseProgram(shaderProgram);
+            litePos = { 2.5f * sin(time), 0.0f, 2.0f * cos(time) };
+
+            world = Scale(V3_ONE * dirLiteRad) * Translate(litePos);
+
+            mvp = world * view * proj;
+            u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
+            u_color = glGetUniformLocation(shaderProgram, "u_color");
+            glUniformMatrix4fv(u_mvp, 1, GL_FALSE, ToFloat16(mvp).v);
+            glUniform3fv(u_color, 1, &liteCol.x);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            DrawMesh(sphereMesh);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+
             break;
 
         // Skybox (cubemap, 1 texture for each side of a cube)!

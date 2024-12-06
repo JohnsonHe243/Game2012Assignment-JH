@@ -11,7 +11,7 @@ out vec4 FragColor;
 // Uniforms
 uniform sampler2D u_tex;
 
-// Camera + Light Para
+// Camera + Light Parameter
 uniform vec3 u_camPos;
 
 // Orbit Light
@@ -24,11 +24,11 @@ uniform vec3 u_dirLitePos;
 uniform float u_dirLiteRad;
 
 // Spot Light
-uniform vec3 u_spoLiteCamPos;
+uniform vec3 u_spoLCamPos;
 uniform vec3 u_spoLitePos;
 uniform vec3 u_spoLiteCol;
 uniform vec3 u_spoLiteDir;
-uniform vec3 u_spoLiteRad;
+uniform float u_spoLiteRad;
 
 void main()
 {
@@ -61,7 +61,7 @@ void main()
 	vec3 orbDfue = u_liteCol * orbNL;
 	vec3 orbSpur = u_liteCol * pow(orbVR, 64);
 
-	vec3 orbLite(orbAmb + orbDfue + orbSpur) * orbDim;
+	vec3 orbLite = (orbAmb + orbDfue + orbSpur) * orbDim;
 
 	// -- Direction Light --
 	vec3 dirL = normalize(u_dirLitePos - position);
@@ -77,7 +77,7 @@ void main()
 
 	// -- Combine Lighting --
 	vec3 texCol = texture(u_tex, tcoord).rgb;
-	vec3 allLites = (orbLite + dirLite + spotLite) * texCol;
+	vec3 allLites = (orbLite + dirLite + spoLite) * texCol;
 
 	// Final Fragment Color
 	FragColor = vec4(allLites, 1.0);

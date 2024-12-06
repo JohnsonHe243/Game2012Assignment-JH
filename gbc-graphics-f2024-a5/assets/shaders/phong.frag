@@ -39,7 +39,7 @@ vec3 phong(vec3 position, vec3 normal, vec3 camera, vec3 light, vec3 color, floa
 // Phong but attenuated
 vec3 point_light(vec3 position, vec3 normal, vec3 camera, vec3 light, vec3 color, float ambientFactor, float diffuseFactor, float specularPower, float radius)
 {
-    vec3 lighting = phong(position, normal, u_cameraPosition, u_lightPosition, u_lightColor, u_ambientFactor, u_diffuseFactor, u_specularPower);
+    vec3 lighting = phong(position, normal, u_camPos, u_litePos, u_liteCol, u_facAmb, u_facDfue, u_powSpur);
 
     float dist = length(light - position);
     float attenuation = clamp(radius / dist, 0.0, 1.0);
@@ -51,7 +51,7 @@ vec3 point_light(vec3 position, vec3 normal, vec3 camera, vec3 light, vec3 color
 // Phong but based on direction only
 vec3 direction_light(vec3 direction, vec3 normal, vec3 camera, vec3 color, float ambientFactor, float diffuseFactor, float specularPower)
 {
-    vec3 lighting = phong(vec3(0.0), normal, u_cameraPosition, -direction, u_lightColor, u_ambientFactor, u_diffuseFactor, u_specularPower);
+    vec3 lighting = phong(vec3(0.0), normal, u_camPos, -direction, u_liteCol, u_facAmb, u_facDfue, u_powSpur);
     return lighting;
 }
 
