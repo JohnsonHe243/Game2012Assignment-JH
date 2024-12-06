@@ -394,6 +394,7 @@ int main(void)
         Matrix view = LookAt(camPos, camPos + camForward, camUp);
         Matrix proj = projection == ORTHO ? Ortho(left, right, bottom, top, near, far) : Perspective(fov, SCREEN_ASPECT, near, far);
         Matrix mvp;
+
         GLint u_mvp = GL_NONE;
         GLint u_tex = GL_NONE;
         GLint u_textureSlots[2];

@@ -222,8 +222,8 @@ int main(void)
 
     float camPitch = 0.0f;
     float camYaw = 0.0f;
-    Vector3 camPosition = V3_ZERO;
-    float camSpeed = 10.0f;
+    //Vector3 camPos = V3_ZERO;
+    float camSpeed = 30.0f;
 
     float objectPitch = 0.0f;
     float objectYaw = 0.0f;
@@ -322,27 +322,27 @@ int main(void)
 
         if (IsKeyDown(GLFW_KEY_W))
         {
-            camPosition += camForward * camMove;
+            camPos += camForward * camMove;
 ;       }
         if (IsKeyDown(GLFW_KEY_S))
         {
-            camPosition -= camForward * camMove;
+            camPos -= camForward * camMove;
         }
         if (IsKeyDown(GLFW_KEY_A))
         {
-            camPosition -= camRight * camMove;
+            camPos += camRight * camMove;
         }
         if (IsKeyDown(GLFW_KEY_D))
         {
-            camPosition += camRight * camMove;
+            camPos -= camRight * camMove;
         }
         if (IsKeyDown(GLFW_KEY_LEFT_SHIFT))
         {
-            camPosition -= camUp * camMove;
+            camPos.y -= camMove;
         }
         if (IsKeyDown(GLFW_KEY_SPACE))
         {
-            camPosition += camUp * camMove;
+            camPos.y += camMove;
         }
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -351,11 +351,13 @@ int main(void)
         Matrix rotationX = RotateX(100.0f * time * DEG2RAD);
         Matrix rotationY = RotateY(100.0f * time * DEG2RAD);
 
+        Matrix matrixScale;
+
         Matrix normal = MatrixIdentity();
         Matrix world = MatrixIdentity();
-        Matrix view = LookAt(camPos, camPos - V3_FORWARD, V3_UP);
+        Matrix view = LookAt(camPos, camPos + camForward, camUp);
         Matrix proj = projection == ORTHO ? Ortho(left, right, bottom, top, near, far) : Perspective(fov, SCREEN_ASPECT, near, far);
-        Matrix mvp = MatrixIdentity();
+        Matrix mvp;
 
         GLuint u_color = -2;
         GLint u_normal = -2;
@@ -388,7 +390,7 @@ int main(void)
             glUseProgram(shaderProgram);
             //view = view * rotationY;
             //view = rotationY * view;
-            world = objectMatrix;//rotationY * Translate(-2.5f, 0.0f, 0.0f);
+            //world = objectMatrix;//rotationY * Translate(-2.5f, 0.0f, 0.0f);
             mvp = world * view * proj;
             u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
             u_tex = glGetUniformLocation(shaderProgram, "u_tex");
@@ -438,7 +440,7 @@ int main(void)
         case 3:
             shaderProgram = shaderPhong;
             glUseProgram(shaderProgram);
-            world = objectMatrix;
+            // world = objectMatrix;
             mvp = world * view * proj;
 
             // Converting from mat4 to mat3 removes the translation
@@ -504,7 +506,7 @@ int main(void)
             // You need to remove the translation column from the view matrix as seen below:
             //view.m12 = view.m13 = view.m14 = 0.0f;
             // (Making the view matrix equivalent to rotations means no translation, but at the cost of motion sickness xD)
-            view = rotationX * rotationY;
+            //view = rotationX * rotationY;
             mvp = world * view * proj;
             u_mvp = glGetUniformLocation(shaderProgram, "u_mvp");
             glUniformMatrix4fv(u_mvp, 1, GL_FALSE, ToFloat16(mvp).v);
